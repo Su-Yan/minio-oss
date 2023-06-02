@@ -1,5 +1,7 @@
 package com.geo.miniooss.service;
 
+import io.minio.GetObjectResponse;
+import io.minio.ObjectWriteResponse;
 import io.minio.Result;
 import io.minio.errors.*;
 import io.minio.http.Method;
@@ -8,6 +10,7 @@ import io.minio.messages.Item;
 import org.springframework.http.HttpMethod;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
@@ -84,4 +87,85 @@ public interface OssTemplateService {
      * @return url
      */
     String getObjectURL(String bucketName, String objectName, int seconds, Method method) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException;
+
+    /**
+     * 获取文件上传外链，只用于上传
+     * @param bucketName bucket名称
+     * @param objectName 文件名称
+     * @param seconds 过期时间，单位秒钟,请注意该值必须小于7天
+     * @return url
+     */
+    String getPutObjectURL(String bucketName, String objectName, int seconds) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException;
+
+    /**
+     * 获取文件
+     * @param bucketName bucket名称
+     * @param objectName 文件名称
+     * @return 二进制流
+     * @throws ServerException
+     * @throws InsufficientDataException
+     * @throws ErrorResponseException
+     * @throws IOException
+     * @throws NoSuchAlgorithmException
+     * @throws InvalidKeyException
+     * @throws InvalidResponseException
+     * @throws XmlParserException
+     * @throws InternalException
+     */
+    GetObjectResponse getObject(String bucketName, String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException;
+
+    /** 上传文件
+     * @param bucketName bucket名称
+     * @param objectName 文件名称
+     * @param stream 文件流
+     */
+    ObjectWriteResponse putObject(String bucketName, String objectName, InputStream stream) throws IOException, ServerException, InsufficientDataException, ErrorResponseException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException;
+
+    /**
+     *  上传文件
+     * @param bucketName bucket名称
+     * @param objectName 文件名称
+     * @param stream 文件流
+     * @param contextType 类型
+     * @return
+     * @throws IOException
+     * @throws ServerException
+     * @throws InsufficientDataException
+     * @throws ErrorResponseException
+     * @throws NoSuchAlgorithmException
+     * @throws InvalidKeyException
+     * @throws InvalidResponseException
+     * @throws XmlParserException
+     * @throws InternalException
+     */
+    ObjectWriteResponse putObject(String bucketName, String objectName, InputStream stream, String contextType) throws IOException, ServerException, InsufficientDataException, ErrorResponseException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException;
+
+    /**
+     * 上传文件
+     * @param bucketName bucket名称
+     * @param objectName 文件名称
+     * @param stream 文件流
+     * @param size 大小
+     * @param contextType 类型
+     * @return
+     * @throws ServerException
+     * @throws InsufficientDataException
+     * @throws ErrorResponseException
+     * @throws IOException
+     * @throws NoSuchAlgorithmException
+     * @throws InvalidKeyException
+     * @throws InvalidResponseException
+     * @throws XmlParserException
+     * @throws InternalException
+     */
+    ObjectWriteResponse putObject(String bucketName, String objectName, InputStream stream, long size,
+                                  String contextType) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException;
+
+    /**
+     * 删除文件
+     * @param bucketName bucket名称
+     * @param objectName 文件名称
+     * @return
+     */
+    String removeObject(String bucketName, String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException;
 }
