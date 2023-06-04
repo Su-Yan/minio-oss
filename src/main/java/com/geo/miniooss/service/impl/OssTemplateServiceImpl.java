@@ -128,6 +128,43 @@ public class OssTemplateServiceImpl implements OssTemplateService{
     }
 
     /**
+     * 查询文件
+     *
+     * @param bucketName bucket名称
+     * @return
+     */
+    @Override
+    public Iterable<Result<Item>> getAllObjectsByBucketName(String bucketName) {
+        Iterable<Result<Item>> iterable = minioClient.listObjects(ListObjectsArgs.builder().bucket(bucketName).build());
+        log.info("根据bucketName："+bucketName+" 获取到的文件信息：");
+        iterable.forEach(itemResult -> {
+            try {
+//                log.info(itemResult.get().lastModified()+"\t"+itemResult.get().size()+"\t"+itemResult.get().objectName());
+                log.info(itemResult.get().objectName());
+            } catch (ErrorResponseException e) {
+                throw new RuntimeException(e);
+            } catch (InsufficientDataException e) {
+                throw new RuntimeException(e);
+            } catch (InternalException e) {
+                throw new RuntimeException(e);
+            } catch (InvalidKeyException e) {
+                throw new RuntimeException(e);
+            } catch (InvalidResponseException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException(e);
+            } catch (ServerException e) {
+                throw new RuntimeException(e);
+            } catch (XmlParserException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        return iterable;
+    }
+
+    /**
      * 获取文件外链，只用于下载
      *
      * @param bucketName bucket名称
@@ -280,6 +317,27 @@ public class OssTemplateServiceImpl implements OssTemplateService{
         minioClient.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
         log.info("bucketName: "+bucketName+" objectName: "+objectName+"文件删除完毕！");
         return IMessage.SUCCESS.CODE;
+    }
+
+    /**
+     * 检查文件是否存在
+     *
+     * @param bucketName  bucket名称
+     * @param objectName 文件名称
+     * @return
+     */
+    @Override
+    public boolean objectIsExists(String bucketName, String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+        boolean res;
+        int size = getObject(bucketName, objectName).available();
+        if (size!=0){
+            log.info("bucketName: "+bucketName+" objectName: "+objectName+"文件存在！");
+            res = true;
+        }else{
+            log.info("bucketName: "+bucketName+" objectName: "+objectName+"文件不存在！");
+            res = false;
+        }
+        return res;
     }
 
 

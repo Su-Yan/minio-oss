@@ -168,4 +168,19 @@ public interface OssTemplateService {
      * @return
      */
     String removeObject(String bucketName, String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException;
+
+    /**
+     *  检查文件是否存在
+     * @param bucketName bucket名称
+     * @param objectName 文件名称
+     * @return
+     */
+    boolean objectIsExists(String bucketName, String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException;
+
+    /**
+     * 查询文件
+     * @param bucketName bucket名称
+     * @return
+     */
+    Iterable<Result<Item>> getAllObjectsByBucketName(String bucketName);
 }
