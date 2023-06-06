@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
@@ -182,5 +183,5 @@ public interface OssTemplateService {
      * @param bucketName bucket名称
      * @return
      */
-    Iterable<Result<Item>> getAllObjectsByBucketName(String bucketName);
+    LinkedList<String> getAllObjectsListByBucketName(String bucketName);
 }

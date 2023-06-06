@@ -13,6 +13,7 @@ import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.LinkedList;
 
 @RestController
 @RequestMapping("/oss")
@@ -43,7 +44,7 @@ public class OssEndpointController {
     }
 
     @GetMapping("/object/list")
-    public Iterable<Result<Item>> getAllObjectList(@RequestParam("bucketName")String bucketName){
-        return ossTemplateService.getAllObjectsByBucketName(bucketName);
+    public LinkedList<String> getAllObjectList(@RequestParam("bucketName")String bucketName){
+        return ossTemplateService.getAllObjectsListByBucketName(bucketName);
     }
 }

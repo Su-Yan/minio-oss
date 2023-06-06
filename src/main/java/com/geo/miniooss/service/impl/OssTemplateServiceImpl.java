@@ -11,11 +11,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import rx.internal.util.LinkedArrayList;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,6 +38,15 @@ public class OssTemplateServiceImpl implements OssTemplateService{
         boolean res = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
         log.info("查询bucketName： "+bucketName+" 是否存在："+res);
         return res;
+    }
+
+    public boolean isFile(String bucketName, String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+        StatObjectResponse statObjectResponse = minioClient.statObject(StatObjectArgs.builder()
+                .bucket(bucketName)
+                .object(objectName)
+                .build());
+//        log.info("bucketName: "+bucketName+"，objectName: "+objectName+" 是否为文件："+ !statObjectResponse);
+        return false;
     }
 
     /**
@@ -127,20 +138,11 @@ public class OssTemplateServiceImpl implements OssTemplateService{
         return iterable;
     }
 
-    /**
-     * 查询文件
-     *
-     * @param bucketName bucket名称
-     * @return
-     */
-    @Override
-    public Iterable<Result<Item>> getAllObjectsByBucketName(String bucketName) {
-        Iterable<Result<Item>> iterable = minioClient.listObjects(ListObjectsArgs.builder().bucket(bucketName).build());
-        log.info("根据bucketName："+bucketName+" 获取到的文件信息：");
-        iterable.forEach(itemResult -> {
+    public void getAllObjectsByPrefix(String bucketName, String prefix, LinkedList<String> objList) {
+        Iterable<Result<Item>> iterable = minioClient.listObjects(ListObjectsArgs.builder().bucket(bucketName).prefix(prefix).build());
+        iterable.forEach(a -> {
             try {
-//                log.info(itemResult.get().lastModified()+"\t"+itemResult.get().size()+"\t"+itemResult.get().objectName());
-                log.info(itemResult.get().objectName());
+                objList.add(a.get().objectName());
             } catch (ErrorResponseException e) {
                 throw new RuntimeException(e);
             } catch (InsufficientDataException e) {
@@ -161,7 +163,53 @@ public class OssTemplateServiceImpl implements OssTemplateService{
                 throw new RuntimeException(e);
             }
         });
-        return iterable;
+    }
+
+    /**
+     * 查询文件
+     *
+     * @param bucketName bucket名称
+     * @return
+     */
+    @Override
+    public LinkedList<String> getAllObjectsListByBucketName(String bucketName) {
+        Iterable<Result<Item>> iterable = minioClient.listObjects(ListObjectsArgs.builder().bucket(bucketName).build());
+        LinkedList<String> objList = new LinkedList<>();
+        LinkedList<String> resList = new LinkedList<>();
+        log.info("bucketName: "+bucketName+"下所有的文件：");
+        iterable.forEach(itemResult -> {
+            try {
+                objList.add(itemResult.get().objectName());
+            } catch (ErrorResponseException e) {
+                throw new RuntimeException(e);
+            } catch (InsufficientDataException e) {
+                throw new RuntimeException(e);
+            } catch (InternalException e) {
+                throw new RuntimeException(e);
+            } catch (InvalidKeyException e) {
+                throw new RuntimeException(e);
+            } catch (InvalidResponseException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException(e);
+            } catch (ServerException e) {
+                throw new RuntimeException(e);
+            } catch (XmlParserException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        while(!objList.isEmpty()){
+            String tmp = objList.removeFirst();
+            if (tmp.endsWith("/")){
+                getAllObjectsByPrefix(bucketName,tmp,objList);
+            }else {
+                resList.add(tmp);
+            }
+        }
+        resList.forEach(name -> log.info(name));
+        return resList;
     }
 
     /**
