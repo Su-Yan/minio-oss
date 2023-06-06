@@ -1,19 +1,17 @@
 package com.geo.miniooss.service;
 
-import io.minio.GetObjectResponse;
+import com.geo.miniooss.domain.vo.ItemVo;
 import io.minio.ObjectWriteResponse;
 import io.minio.Result;
 import io.minio.errors.*;
 import io.minio.http.Method;
 import io.minio.messages.Bucket;
 import io.minio.messages.Item;
-import org.springframework.http.HttpMethod;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.time.Duration;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -100,6 +98,7 @@ public interface OssTemplateService {
 
     /**
      * 获取文件
+     *
      * @param bucketName bucket名称
      * @param objectName 文件名称
      * @return 二进制流
@@ -113,7 +112,7 @@ public interface OssTemplateService {
      * @throws XmlParserException
      * @throws InternalException
      */
-    GetObjectResponse getObject(String bucketName, String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException;
+    InputStream getObject(String bucketName, String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException;
 
     /** 上传文件
      * @param bucketName bucket名称
@@ -183,5 +182,5 @@ public interface OssTemplateService {
      * @param bucketName bucket名称
      * @return
      */
-    LinkedList<String> getAllObjectsListByBucketName(String bucketName);
+    LinkedList<ItemVo> getAllObjectsListByBucketName(String bucketName);
 }

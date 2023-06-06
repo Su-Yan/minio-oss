@@ -1,6 +1,7 @@
 package com.geo.miniooss.service.impl;
 
 import com.geo.miniooss.constant.IMessage;
+import com.geo.miniooss.domain.vo.ItemVo;
 import com.geo.miniooss.service.OssTemplateService;
 import io.minio.*;
 import io.minio.errors.*;
@@ -11,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import rx.internal.util.LinkedArrayList;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -138,11 +138,11 @@ public class OssTemplateServiceImpl implements OssTemplateService{
         return iterable;
     }
 
-    public void getAllObjectsByPrefix(String bucketName, String prefix, LinkedList<String> objList) {
+    public void getAllObjectsByPrefix(String bucketName, String prefix, LinkedList<Item> objList) {
         Iterable<Result<Item>> iterable = minioClient.listObjects(ListObjectsArgs.builder().bucket(bucketName).prefix(prefix).build());
         iterable.forEach(a -> {
             try {
-                objList.add(a.get().objectName());
+                objList.add(a.get());
             } catch (ErrorResponseException e) {
                 throw new RuntimeException(e);
             } catch (InsufficientDataException e) {
@@ -172,14 +172,14 @@ public class OssTemplateServiceImpl implements OssTemplateService{
      * @return
      */
     @Override
-    public LinkedList<String> getAllObjectsListByBucketName(String bucketName) {
+    public LinkedList<ItemVo> getAllObjectsListByBucketName(String bucketName) {
         Iterable<Result<Item>> iterable = minioClient.listObjects(ListObjectsArgs.builder().bucket(bucketName).build());
-        LinkedList<String> objList = new LinkedList<>();
-        LinkedList<String> resList = new LinkedList<>();
+        LinkedList<Item> objList = new LinkedList<>();
+        LinkedList<ItemVo> resList = new LinkedList<>();
         log.info("bucketName: "+bucketName+"下所有的文件：");
         iterable.forEach(itemResult -> {
             try {
-                objList.add(itemResult.get().objectName());
+                objList.add(itemResult.get());
             } catch (ErrorResponseException e) {
                 throw new RuntimeException(e);
             } catch (InsufficientDataException e) {
@@ -201,14 +201,14 @@ public class OssTemplateServiceImpl implements OssTemplateService{
             }
         });
         while(!objList.isEmpty()){
-            String tmp = objList.removeFirst();
-            if (tmp.endsWith("/")){
-                getAllObjectsByPrefix(bucketName,tmp,objList);
+            Item tmp = objList.removeFirst();
+            if (tmp.isDir()){
+                getAllObjectsByPrefix(bucketName,tmp.objectName(),objList);
             }else {
-                resList.add(tmp);
+                resList.add(new ItemVo(tmp));
             }
         }
-        resList.forEach(name -> log.info(name));
+//        resList.forEach(item -> log.info(item.objectName()));
         return resList;
     }
 
@@ -263,6 +263,7 @@ public class OssTemplateServiceImpl implements OssTemplateService{
 
     /**
      * 获取文件
+     *
      * @param bucketName bucket名称
      * @param objectName 文件名称
      * @return 二进制流
@@ -277,10 +278,10 @@ public class OssTemplateServiceImpl implements OssTemplateService{
      * @throws InternalException
      */
     @Override
-    public GetObjectResponse getObject(String bucketName, String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
-        GetObjectResponse getObjectResponse = minioClient.getObject(GetObjectArgs.builder().bucket(bucketName).object(objectName).build());
+    public InputStream getObject(String bucketName, String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+        InputStream inputStream = minioClient.getObject(GetObjectArgs.builder().bucket(bucketName).object(objectName).build());
         log.info("bucketName: "+bucketName+" objectName: "+objectName+"文件已获取！");
-        return getObjectResponse;
+        return inputStream;
     }
 
     /** 上传文件
@@ -377,12 +378,13 @@ public class OssTemplateServiceImpl implements OssTemplateService{
     @Override
     public boolean objectIsExists(String bucketName, String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         boolean res;
-        int size = getObject(bucketName, objectName).available();
+        StatObjectResponse stat = minioClient.statObject(StatObjectArgs.builder().bucket(bucketName).object(objectName).build());
+        long size = stat.size();
         if (size!=0){
-            log.info("bucketName: "+bucketName+" objectName: "+objectName+"文件存在！");
+            log.info("bucketName: "+bucketName+" objectName: "+objectName+"文件存在！size: "+size);
             res = true;
         }else{
-            log.info("bucketName: "+bucketName+" objectName: "+objectName+"文件不存在！");
+            log.info("bucketName: "+bucketName+" objectName: "+objectName+"文件不存在！size: "+size);
             res = false;
         }
         return res;

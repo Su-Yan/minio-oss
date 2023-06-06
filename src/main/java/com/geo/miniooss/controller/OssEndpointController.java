@@ -1,10 +1,12 @@
 package com.geo.miniooss.controller;
 
+import com.geo.miniooss.domain.vo.ItemVo;
 import com.geo.miniooss.service.OssTemplateService;
 import io.minio.Result;
 import io.minio.errors.*;
 import io.minio.messages.Bucket;
 import io.minio.messages.Item;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +17,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.LinkedList;
 
+@Slf4j
 @RestController
 @RequestMapping("/oss")
 public class OssEndpointController {
@@ -44,7 +47,9 @@ public class OssEndpointController {
     }
 
     @GetMapping("/object/list")
-    public LinkedList<String> getAllObjectList(@RequestParam("bucketName")String bucketName){
-        return ossTemplateService.getAllObjectsListByBucketName(bucketName);
+    public LinkedList<ItemVo> getAllObjectList(@RequestParam("bucketName")String bucketName){
+        LinkedList<ItemVo> items = ossTemplateService.getAllObjectsListByBucketName(bucketName);
+        items.forEach(item -> log.info(item.objectName));
+        return items;
     }
 }
