@@ -40,7 +40,7 @@ public class OssEndpointController {
         return ossTemplateService.removeBucket(bucketName);
     }
 
-    @GetMapping("/bucket/getFileUrl")
+    @GetMapping("/object/getFileUrl")
     public String getFileUrl(@RequestParam("bucketName")String bucketName, @RequestParam("objectName")String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         return ossTemplateService.getObjectURL(bucketName,objectName,3600);
     }
@@ -52,8 +52,8 @@ public class OssEndpointController {
 
     @GetMapping("/object/list")
     public LinkedList<ItemVo> getAllObjectList(@RequestParam("bucketName")String bucketName){
-        LinkedList<ItemVo> items = ossTemplateService.getAllObjectsListByBucketName(bucketName);
-        items.forEach(item -> log.info(item.objectName));
+//        LinkedList<ItemVo> items = ossTemplateService.getAllObjectsListByBucketName(bucketName);
+        LinkedList<ItemVo> items = ossTemplateService.getAllObjectsListByRecursive(bucketName);
         return items;
     }
 }

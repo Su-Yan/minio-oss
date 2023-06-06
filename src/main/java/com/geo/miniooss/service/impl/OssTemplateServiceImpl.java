@@ -216,8 +216,45 @@ public class OssTemplateServiceImpl implements OssTemplateService{
                 resList.add(new ItemVo(tmp));
             }
         }
-//        resList.forEach(item -> log.info(item.objectName()));
+        resList.forEach(item -> log.info(item.objectName));
         return resList;
+    }
+
+    /**
+     * 查询文件
+     * @param bucketName bucket名称
+     * @return
+     */
+    @Override
+    public LinkedList<ItemVo> getAllObjectsListByRecursive(String bucketName) {
+        Iterable<Result<Item>> iterable = minioClient.listObjects(ListObjectsArgs.builder().bucket(bucketName).recursive(true).build());
+        LinkedList<ItemVo> itemVos = new LinkedList<>();
+        iterable.forEach(item -> {
+            try {
+                itemVos.add(new ItemVo(item.get()));
+            } catch (ErrorResponseException e) {
+                throw new RuntimeException(e);
+            } catch (InsufficientDataException e) {
+                throw new RuntimeException(e);
+            } catch (InternalException e) {
+                throw new RuntimeException(e);
+            } catch (InvalidKeyException e) {
+                throw new RuntimeException(e);
+            } catch (InvalidResponseException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException(e);
+            } catch (ServerException e) {
+                throw new RuntimeException(e);
+            } catch (XmlParserException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        log.info("bucketName: "+bucketName+"下所有的文件：");
+        itemVos.forEach(itemVo -> log.info(itemVo.objectName));
+        return itemVos;
     }
 
     /**

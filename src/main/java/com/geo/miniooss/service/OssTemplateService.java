@@ -183,4 +183,13 @@ public interface OssTemplateService {
      * @return
      */
     LinkedList<ItemVo> getAllObjectsListByBucketName(String bucketName);
+
+    /**
+     * 查询文件
+     * @param bucketName bucket名称
+     * @return
+     */
+    LinkedList<ItemVo> getAllObjectsListByRecursive(String bucketName);
+
+
 }
