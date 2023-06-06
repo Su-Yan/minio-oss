@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -387,7 +388,7 @@ public class OssTemplateServiceImpl implements OssTemplateService{
         ObjectWriteResponse objectWriteResponse = minioClient.putObject(PutObjectArgs.builder()
                 .bucket(bucketName)
                 .object(objectName)
-                .stream(stream, size, size)
+                .stream(stream, size, -1)
                 .contentType(contextType)
                 .build());
         if (!StringUtils.isEmpty(objectWriteResponse.versionId())){
@@ -396,6 +397,18 @@ public class OssTemplateServiceImpl implements OssTemplateService{
             log.error("bucketName: "+bucketName+" objectName: "+objectName+"文件上传失败！");
         }
         return objectWriteResponse;
+    }
+
+    /**
+     * @param bucketName
+     * @param objectName
+     * @param object
+     */
+    @Override
+    public void putObject(String bucketName, String objectName, MultipartFile object) throws IOException, ServerException, InsufficientDataException, ErrorResponseException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+        InputStream inputStream = object.getInputStream();
+        String name = object.getOriginalFilename();
+        putObject(bucketName, name, inputStream, object.getSize(), object.getContentType());
     }
 
     /**
