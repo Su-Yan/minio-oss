@@ -25,23 +25,27 @@ public class OssEndpointController {
     @Autowired
     private OssTemplateService ossTemplateService;
 
-    @PostMapping("/bucket/{bucketName}")
-    public Bucket createBucket(@PathVariable @NotBlank String bucketName) throws Exception {
-        ossTemplateService.createBucket(bucketName);
-        return ossTemplateService.getBucket(bucketName).get();
+    @PostMapping("/bucket/createBucket")
+    public String createBucket(@RequestParam("bucketName")String bucketName) throws Exception {
+        return ossTemplateService.createBucket(bucketName);
     }
 
-    @GetMapping("/bucket/isexist")
+    @GetMapping("/bucket/isExists")
     public boolean isExists(@RequestParam("bucketName")String bucketName) throws Exception {
-        return ossTemplateService.isExist(bucketName);
+        return ossTemplateService.bucketIsExist(bucketName);
     }
 
-    @GetMapping("/bucket/getfileurl")
+    @DeleteMapping("/bucket/deleteBucket")
+    public String deleteBucket(@RequestParam("bucketName")String bucketName) throws Exception {
+        return ossTemplateService.removeBucket(bucketName);
+    }
+
+    @GetMapping("/bucket/getFileUrl")
     public String getFileUrl(@RequestParam("bucketName")String bucketName, @RequestParam("objectName")String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         return ossTemplateService.getObjectURL(bucketName,objectName,3600);
     }
 
-    @GetMapping("/object/isexist")
+    @GetMapping("/object/isExists")
     public boolean objectIsExists(@RequestParam("bucketName")String bucketName, @RequestParam("objectName")String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
         return ossTemplateService.objectIsExists(bucketName, objectName);
     }

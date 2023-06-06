@@ -3,7 +3,8 @@ package com.geo.miniooss.constant;
 public enum IMessage {
     SUCCESS("000","成功"),
     FAILED("001","失败"),
-    EXIST("002","已存在");
+    EXIST("002","已存在"),
+    NOTEXIST("003","不存在");
     public String CODE;
     private String MESSAGE;
 

@@ -23,7 +23,7 @@ public interface OssTemplateService {
      * @return
      * @throws Exception
      */
-    boolean isExist(String bucketName) throws Exception;
+    boolean bucketIsExist(String bucketName) throws Exception;
 
     /**
      * 创建bucket
@@ -59,7 +59,7 @@ public interface OssTemplateService {
      * @throws XmlParserException
      * @throws InternalException
      */
-    void removeBucket(String bucketName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException;
+    String removeBucket(String bucketName) throws Exception;
 
     /**根据文件前缀查询文件
      * @param bucketName bucket名称

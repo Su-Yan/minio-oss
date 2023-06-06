@@ -34,7 +34,7 @@ public class OssTemplateServiceImpl implements OssTemplateService{
      * @throws Exception
      */
     @Override
-    public boolean isExist(String bucketName) throws Exception {
+    public boolean bucketIsExist(String bucketName) throws Exception {
         boolean res = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
         log.info("查询bucketName： "+bucketName+" 是否存在："+res);
         return res;
@@ -58,7 +58,7 @@ public class OssTemplateServiceImpl implements OssTemplateService{
     @Override
     public String createBucket(String bucketName) throws Exception {
         String res = IMessage.FAILED.CODE;
-        if (isExist(bucketName)){
+        if (bucketIsExist(bucketName)){
             log.warn("该bucketName： "+bucketName+" 已存在！无法重复创建！");
             res = IMessage.EXIST.CODE;
         }else{
@@ -120,9 +120,17 @@ public class OssTemplateServiceImpl implements OssTemplateService{
      * @throws InternalException
      */
     @Override
-    public void removeBucket(String bucketName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
-        minioClient.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
-        log.info("bucketName："+bucketName+" 已删除！");
+    public String removeBucket(String bucketName) throws Exception {
+        String res;
+        if (bucketIsExist(bucketName)){
+            minioClient.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+            res = IMessage.SUCCESS.CODE;
+            log.info("bucketName："+bucketName+" 已删除！");
+        }else {
+            log.info("bucketName："+bucketName+" 不存在，无需删除！");
+            res = IMessage.NOTEXIST.CODE;
+        }
+        return res;
     }
 
     /**根据文件前缀查询文件
