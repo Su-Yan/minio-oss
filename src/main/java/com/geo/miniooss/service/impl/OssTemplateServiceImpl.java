@@ -1,6 +1,6 @@
 package com.geo.miniooss.service.impl;
 
-import com.geo.miniooss.constant.IMessage;
+import com.geo.miniooss.constant.IConstant;
 import com.geo.miniooss.domain.vo.ItemVo;
 import com.geo.miniooss.service.OssTemplateService;
 import io.minio.*;
@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLDecoder;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.LinkedList;
@@ -58,14 +59,14 @@ public class OssTemplateServiceImpl implements OssTemplateService{
      */
     @Override
     public String createBucket(String bucketName) throws Exception {
-        String res = IMessage.FAILED.CODE;
+        String res = IConstant.FAILED.CODE;
         if (bucketIsExist(bucketName)){
             log.warn("该bucketName： "+bucketName+" 已存在！无法重复创建！");
-            res = IMessage.EXIST.CODE;
+            res = IConstant.EXIST.CODE;
         }else{
             minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
             log.info("该bucketName： "+bucketName+" 创建成功！");
-            res = IMessage.SUCCESS.CODE;
+            res = IConstant.SUCCESS.CODE;
         }
         return res;
     }
@@ -125,11 +126,11 @@ public class OssTemplateServiceImpl implements OssTemplateService{
         String res;
         if (bucketIsExist(bucketName)){
             minioClient.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
-            res = IMessage.SUCCESS.CODE;
+            res = IConstant.SUCCESS.CODE;
             log.info("bucketName："+bucketName+" 已删除！");
         }else {
             log.info("bucketName："+bucketName+" 不存在，无需删除！");
-            res = IMessage.NOTEXIST.CODE;
+            res = IConstant.NOTEXIST.CODE;
         }
         return res;
     }
@@ -282,12 +283,13 @@ public class OssTemplateServiceImpl implements OssTemplateService{
      */
     @Override
     public String getObjectURL(String bucketName, String objectName, int seconds, Method method) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
-        String url = minioClient.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
+        String url = URLDecoder.decode(minioClient.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
                 .bucket(bucketName)
                 .object(objectName)
                 .method(method)
                 .expiry(seconds)
-                .build());
+                .build()), IConstant.UTF8.CODE);
+
         log.info("bucketName："+bucketName+" objectName："+objectName+" 该文件Url为： "+url);
         return url;
     }
@@ -405,10 +407,15 @@ public class OssTemplateServiceImpl implements OssTemplateService{
      * @param object
      */
     @Override
-    public void putObject(String bucketName, String objectName, MultipartFile object) throws IOException, ServerException, InsufficientDataException, ErrorResponseException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+    public String putObject(String bucketName, String objectName, MultipartFile object) throws IOException, ServerException, InsufficientDataException, ErrorResponseException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+        String res = IConstant.FAILED.CODE;
         InputStream inputStream = object.getInputStream();
         String name = object.getOriginalFilename();
-        putObject(bucketName, name, inputStream, object.getSize(), object.getContentType());
+        ObjectWriteResponse objectWriteResponse = putObject(bucketName, objectName, inputStream, object.getSize(), object.getContentType());
+        if (objectWriteResponse.object().equals(objectName)){
+            res = IConstant.SUCCESS.CODE;
+        }
+        return res;
     }
 
     /**
@@ -419,11 +426,17 @@ public class OssTemplateServiceImpl implements OssTemplateService{
      * @return
      */
     @Override
-    public String removeObject(String bucketName, String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
-        log.info("bucketName: "+bucketName+" objectName: "+objectName+"文件开始删除...");
-        minioClient.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-        log.info("bucketName: "+bucketName+" objectName: "+objectName+"文件删除完毕！");
-        return IMessage.SUCCESS.CODE;
+    public String removeObject(String bucketName, String objectName) throws Exception {
+        String res =IConstant.FAILED.CODE;
+        if (objectIsExists(bucketName, objectName)){
+            log.info("bucketName: "+bucketName+" objectName: "+objectName+"文件开始删除...");
+            minioClient.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+            log.info("bucketName: "+bucketName+" objectName: "+objectName+"文件删除完毕！");
+        }else {
+            log.info("bucketName: "+bucketName+" objectName: "+objectName+"文件不存在，无需删除！");
+            res = IConstant.NOTEXIST.CODE;
+        }
+        return res;
     }
 
     /**
@@ -434,16 +447,25 @@ public class OssTemplateServiceImpl implements OssTemplateService{
      * @return
      */
     @Override
-    public boolean objectIsExists(String bucketName, String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
-        boolean res;
-        StatObjectResponse stat = minioClient.statObject(StatObjectArgs.builder().bucket(bucketName).object(objectName).build());
-        long size = stat.size();
-        if (size!=0){
-            log.info("bucketName: "+bucketName+" objectName: "+objectName+"文件存在！size: "+size);
-            res = true;
-        }else{
-            log.info("bucketName: "+bucketName+" objectName: "+objectName+"文件不存在！size: "+size);
+    public boolean objectIsExists(String bucketName, String objectName) throws Exception {
+        boolean res = false;
+        if (!bucketIsExist(bucketName)){
             res = false;
+            return res;
+        }
+        try {
+            StatObjectResponse stat = minioClient.statObject(StatObjectArgs.builder().bucket(bucketName).object(objectName).build());
+            long size = stat.size();
+            if (size!=0){
+                log.info("bucketName: "+bucketName+" objectName: "+objectName+"文件存在！size: "+size);
+                res = true;
+            }
+        }catch (Exception exception){
+            log.warn(exception.getMessage());
+            if (exception.getMessage().contains("Object does not exist")){
+                log.info("bucketName: "+bucketName+" objectName: "+objectName+"文件不存在！");
+                res = false;
+            }
         }
         return res;
     }

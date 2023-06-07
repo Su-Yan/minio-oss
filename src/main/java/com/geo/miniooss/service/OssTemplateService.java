@@ -162,7 +162,9 @@ public interface OssTemplateService {
     ObjectWriteResponse putObject(String bucketName, String objectName, InputStream stream, long size,
                                   String contextType) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException;
 
-    void putObject(String bucketName, String objectName, MultipartFile object) throws IOException, ServerException, InsufficientDataException, ErrorResponseException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException;
+    String putObject(String bucketName, String objectName, MultipartFile object) throws IOException, ServerException, InsufficientDataException, ErrorResponseException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException;
+
+
 
     /**
      * 删除文件
@@ -170,7 +172,7 @@ public interface OssTemplateService {
      * @param objectName 文件名称
      * @return
      */
-    String removeObject(String bucketName, String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException;
+    String removeObject(String bucketName, String objectName) throws Exception;
 
     /**
      *  检查文件是否存在
@@ -178,7 +180,7 @@ public interface OssTemplateService {
      * @param objectName 文件名称
      * @return
      */
-    boolean objectIsExists(String bucketName, String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException;
+    boolean objectIsExists(String bucketName, String objectName) throws Exception;
 
     /**
      * 查询文件

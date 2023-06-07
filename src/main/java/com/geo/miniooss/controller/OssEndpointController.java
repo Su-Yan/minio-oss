@@ -2,19 +2,13 @@ package com.geo.miniooss.controller;
 
 import com.geo.miniooss.domain.vo.ItemVo;
 import com.geo.miniooss.service.OssTemplateService;
-import io.minio.Result;
 import io.minio.errors.*;
-import io.minio.messages.Bucket;
-import io.minio.messages.Item;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import java.io.IOException;
-import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.LinkedList;
@@ -48,22 +42,37 @@ public class OssEndpointController {
     }
 
     @GetMapping("/object/isExists")
-    public boolean objectIsExists(@RequestParam("bucketName")String bucketName, @RequestParam("objectName")String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+    public boolean objectIsExists(@RequestParam("bucketName")String bucketName, @RequestParam("objectName")String objectName) throws Exception {
         return ossTemplateService.objectIsExists(bucketName, objectName);
     }
 
     @GetMapping("/object/list")
     public LinkedList<ItemVo> getAllObjectList(@RequestParam("bucketName")String bucketName){
-//         替换查询方式，使用官方recursive方法
-//        LinkedList<ItemVo> items = ossTemplateService.getAllObjectsListByBucketName(bucketName);
         LinkedList<ItemVo> items = ossTemplateService.getAllObjectsListByRecursive(bucketName);
         return items;
     }
 
     @PostMapping("/object/uploadFile")
     public String uploadFile(@RequestParam("bucketName")String bucketName, @RequestParam("objectName")String objectName, @RequestParam("file") MultipartFile object) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+        String res = ossTemplateService.putObject(bucketName, objectName, object);
+        return res;
+    }
+
+    @GetMapping("/object/getUploadUrl")
+    public String getUploadUrl(@RequestParam("bucketName")String bucketName, @RequestParam("objectName")String objectName) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+        String res = ossTemplateService.getPutObjectURL(bucketName,objectName,10*60);
+        return res;
+    }
+
+    @PostMapping("/object/uploadFileByFragmentation")
+    public String uploadFileByFragmentation(@RequestParam("bucketName")String bucketName, @RequestParam("objectName")String objectName, @RequestParam("file") MultipartFile object){
         String res = null;
-        ossTemplateService.putObject(bucketName, objectName, object);
+        return res;
+    }
+
+    @DeleteMapping("/object/deleteObject")
+    public String deleteObject(@RequestParam("bucketName")String bucketName, @RequestParam("objectName")String objectName) throws Exception {
+        String res = ossTemplateService.removeObject(bucketName, objectName);
         return res;
     }
 }
